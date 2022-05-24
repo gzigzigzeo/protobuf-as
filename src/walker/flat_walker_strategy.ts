@@ -4,11 +4,18 @@ import { DecoratedDescriptorIndex } from '../proto/decorated_descriptor_index.js
 import { AbstractDescriptorCollection } from '../proto/index.js';
 
 /**
- * Walker interface
+ * File interface represents the generated file
+ */
+export interface File {
+    name: string;
+    content: string;
+}
+
+/**
+ * Walker interface, emits files
  */
 export interface Walker {
-    content(): string;
-    staticFiles(): string[];
+    files(): File[];
 }
 
 // Walker strategy is a strategy which calls a walker methods in an order required

@@ -85,8 +85,7 @@ protoc --plugin=./node_modules/protobuf-as/bin/protoc-gen-as --as_out=assembly -
 The generated code depends on a few common classes. You can control exporting them using `deps` option.
 
 * `deps=embed` (default) embeds dependencies to the generated file, within the special `__proto` namespace.
-* `deps=export` exports dependencies as a separate files in the same folder.
-* `deps=package` generates normal imports from the `protobuf-as` package.
+* `deps=export` exports dependencies as the separate files.
 
 # Setting target file properties
 

@@ -24,9 +24,6 @@ export class Blocks {
                 
                 break;
             }
-            case "package":
-                this.p(`import { Decoder, Encoder, Sizer } from 'protobuf-as'`);
-                break;
         }
     }
 

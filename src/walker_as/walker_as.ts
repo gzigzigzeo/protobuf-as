@@ -1,4 +1,4 @@
-import { FlatWalker } from '../walker/index.js';
+import { FlatWalker, File } from '../walker/index.js';
 import { decorated } from '../proto/index.js';
 import { Blocks } from './blocks.js';
 import { Namespace } from './namespace.js';
@@ -11,9 +11,10 @@ import { Encode } from './encode.js';
 import { Size } from './size.js';
 import { OneOf } from './one_of.js';
 import { join } from 'path';
-import prettier from 'prettier';
 import path from 'path';
-import {fileURLToPath} from 'url';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { prettify } from './prettify.js';
 
 // Writer implements generic function which prints a code piece
 export type Writer = (value: string) => void;
@@ -32,12 +33,6 @@ const staticFiles = [
     join(__dirname, '../../assembly/encoder.ts'),
     join(__dirname, '../../assembly/sizer.ts'),
 ]
-
-// Options for prettier, TODO: move to WalkerAS
-const prettierOptions: prettier.Options = {
-    parser: 'typescript',
-    tabWidth: 4,
-};
 
 /**
  * WalkerAS represents Walker implementing FlatWalker strategy producing AssemblyScript code. This is the composite class.
@@ -58,7 +53,7 @@ export class WalkerAS implements FlatWalker, GlobalsRegistry {
     constructor(private options: Readonly<Options>) {
         const p = this.p.bind(this);
 
-        this.blocks = new Blocks(p, this.options, this.staticFiles());
+        this.blocks = new Blocks(p, this.options, staticFiles);
         this.namespace = new Namespace(p);
         this.enum = new Enum(p);
         this.message = new Message(p, this.options);
@@ -173,20 +168,22 @@ export class WalkerAS implements FlatWalker, GlobalsRegistry {
         this.oneOf.discriminatorConst(desc);
     }
 
-    public content() {
-        const content = this.chunks.join('\n');
+    public files():File[] {
+        const files:File[] = [{
+            name: this.options.targetFileName, content: this.chunks.join('\n')
+        }];
+    
+        if (this.options.deps == 'export') {
+            staticFiles.forEach((f) => {
+                files.push({ name: path.basename(f), content: fs.readFileSync(f).toString() });
+            });
+        }  
 
-        return this.options.disablePrettier
-            ? content
-            : prettier.format(content, prettierOptions);
-    }
-
-    public staticFiles() {
-        if (this.options.deps != "package") {
-            return staticFiles;
+        if (this.options.disablePrettier) {
+            return files
         }
-
-        return [];
+        
+        return prettify(files)
     }
 
     p(s: string) {
